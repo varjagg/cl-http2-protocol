@@ -20,6 +20,7 @@ Originally a port of Ruby code by Ilya Grigorik, see: https://github.com/igrigor
 	       :babel
 	       :puri
 	       :usocket
+	       :cl-libevent2-ssl
 	       :cl+ssl
 	       :cl-async
 	       :cl-async-ssl)
