@@ -154,7 +154,7 @@ is done ignoring errors, so it may bail and use the raw bytes."
 		      do (vector-push-extend h string)))
 		 (return string)))))
 
-(defun make-data-vector (n)
+(defun make-data-vbector (n)
   "Call MAKE-ARRAY for size N (but not less than a standard size) for an adjustable fill-pointer byte array."
   (when (> n #.(* 64 1024))
     (raise simple-condition "MAKE-DATA-VECTOR called with ~A as N value, greater than safety maximum." n))
@@ -165,6 +165,10 @@ is done ignoring errors, so it may bail and use the raw bytes."
 (defclass buffer ()
   ((vectordata :accessor buffer-data :initarg :data :initform (make-data-vector 0)))
   (:documentation "Class for byte data operations"))
+
+(defmethod buffer-data-simple ((b buffer))
+  "Present buffer data as acceptable by socket"
+  (make-array (length (buffer-data b)) :initial-contents (buffer-data b) :element-type '(unsigned-byte 8)))
 
 (defmethod bufferp ((buffer buffer))
   t)

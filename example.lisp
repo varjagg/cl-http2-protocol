@@ -7,7 +7,7 @@
 (defparameter *server-cert-file*     (merge-pathnames "mycert.pem" 	  *key-pathname*))
 (defparameter *server-dhparams-file* (merge-pathnames "dhparams.2048.pem" *key-pathname*))
 
-(defparameter *next-protos-spec* '("h2-14"))
+(defparameter *next-protos-spec* '("h2") #+nil'("h2-14"))
 
 (defparameter *dump-bytes*        t   "Set to T to dump bytes as they are received/sent. Set to NIL to quieten.")
 (defparameter *dump-bytes-stream* t   "Set to T for stdout, or a stream value.")
@@ -73,11 +73,12 @@
 	    (sni-cleanup (cl-async-ssl::init-ssl-sni :client cl+ssl::*ssl-global-context* (or sni (uri-host (or proxy-uri uri))))))
 	(add-event-loop-exit-callback npn-cleanup)
 	(add-event-loop-exit-callback sni-cleanup))
-      (let ((client-ctx (cl-async-ssl::init-ssl-client-context cl+ssl::*ssl-global-context*)))
+      (let ((client-ctx (cl-async-ssl::create-ssl-ctx :method :tlsv1-client)
+	      #+nil(cl-async-ssl::init-ssl-client-context cl+ssl::*ssl-global-context*)))
 	(apply cl-async-connect
 	       connect-host connect-port
 	       #'read-handler
-	       #'event-handler
+	       :event-cb #'event-handler
 	       :ssl-ctx client-ctx
 	       :connect-cb
 	       (lambda (new-socket)
@@ -151,9 +152,9 @@ functions such as (HEADERS ...) to make a request."
   (let ((conn (make-instance 'client)))
     (on conn :frame
 	(lambda (bytes)
-	  (maybe-dump-bytes :send (buffer-data bytes))
+	  (maybe-dump-bytes :send (buffer-data-simple bytes))
 	  (handler-case
-	      (write-socket-data socket (buffer-data bytes))
+	      (write-socket-data socket (buffer-data-simple bytes))
 	    (as:socket-closed ()
 	      (event-handler (make-condition 'as:tcp-eof :socket socket))))))
     
